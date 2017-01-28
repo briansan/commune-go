@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+        <title>Single file upload</title>
+        </head>
+        <body>
+        <h1>Upload single file with fields</h1>
+
+        <form action="/api/v1/files" method="post" enctype="multipart/form-data">
+            Title: <input type="text" name="title"><br>
+            Description: <input type="text" name="description"><br>
+            File: <input type="file" name="file"><br><br>
+            <input type="submit" value="Submit">
+</form>
+</body>
+</html>
