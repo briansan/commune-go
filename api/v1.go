@@ -9,7 +9,9 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mgutz/logxi/v1"
 
-	model "github.com/briansan/commune-go/model/v1"
+	"github.com/briansan/commune-go/errors"
+	model "github.com/briansan/commune-go/model/schema"
+	"github.com/briansan/commune-go/model/store"
 )
 
 const (
@@ -27,7 +29,7 @@ var (
 		videoType: []string{},
 	}
 
-	logV1 = log.New("api-v1")
+	logger = log.New("api-v1")
 )
 
 func v1FilesPost(c echo.Context) error {
@@ -85,8 +87,17 @@ func v1UsersPost(c echo.Context) error {
 	u := model.User{}
 	c.Bind(&u)
 
-	if err := model.CreateUser(&u); err != nil {
-		return errorResponse(c, err)
+	if err := u.Validate(); err != nil {
+		return errors.Response(c, err)
+	}
+
+	// Get db connection
+	db := store.NewMongoStore()
+	defer db.Cleanup()
+
+	// Try to add user
+	if err := db.CreateUser(&u); err != nil {
+		return errors.Response(c, err)
 	}
 	return c.JSON(http.StatusOK, u)
 }

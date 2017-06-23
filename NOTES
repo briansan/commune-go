@@ -1,0 +1,20 @@
+-------
+Commune
+-------
+
+- Share content from around the community
+- Types:
+  - users
+    - name (first, last, user)
+    - email
+    - password
+    - layouts
+  - communitys
+    - name
+    - users
+    - posts
+  - posts
+    - layout
+    - content (dict)
+  - layouts
+  - content
