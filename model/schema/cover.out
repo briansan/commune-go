@@ -1,8 +1,0 @@
-mode: set
-github.com/briansan/commune-go/model/schema/user.go:16.33,17.23 1 1
-github.com/briansan/commune-go/model/schema/user.go:20.2,20.26 1 1
-github.com/briansan/commune-go/model/schema/user.go:23.2,23.26 1 1
-github.com/briansan/commune-go/model/schema/user.go:26.2,26.12 1 1
-github.com/briansan/commune-go/model/schema/user.go:17.23,19.3 1 1
-github.com/briansan/commune-go/model/schema/user.go:20.26,22.3 1 1
-github.com/briansan/commune-go/model/schema/user.go:23.26,25.3 1 1

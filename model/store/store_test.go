@@ -5,45 +5,70 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/briansan/commune-go/errors"
 	"github.com/briansan/commune-go/model/schema"
 )
 
 type StoreTestSuite struct {
 	suite.Suite
-	mongo *MongoStore
+	store *MongoStore
 }
 
 func (suite *StoreTestSuite) SetupTest() {
-	databaseName = "test"
+	// Use test database and reestablish session
+	databaseName = "commune_test"
+	InitMongoSession()
 
-	var err error
-	suite.mongo, err = NewMongoStore()
+	var err errors.HTTPError
+	suite.store, err = NewMongoStore()
 	suite.Nil(err)
-}
 
-func (suite *StoreTestSuite) TearDownTest() {
-	suite.mongo.GetUsersCollection().DropCollection()
+	suite.store.GetUsersCollection().DropCollection()
 }
 
 func TestExampleTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
+// Test001_User asserts proper CRUD functionality of user object with mongo
 func (suite *StoreTestSuite) Test001_User() {
 	username := "foo"
+	email := "bar"
 
-	err := suite.mongo.CreateUser(&schema.User{Username: username})
+	// Test CreateUser
+	err := suite.store.CreateUser(&schema.User{
+		Username: &username,
+		Email:    &email,
+	})
 	suite.Nil(err)
 
-	exists, err := suite.mongo.UserExists(username)
+	// Test GetUserByUsername
+	user, err := suite.store.GetUserByUsername(username)
 	suite.Nil(err)
-	suite.True(exists)
-
-	user, err := suite.mongo.GetUserByUsername(username)
-	suite.Nil(err)
+	suite.NotNil(user)
 	suite.Equal(username, user.Username)
+	suite.Equal(email, user.Email)
 
-	sameUser, err := suite.mongo.DeleteUser(username)
+	// Test GetUserByEmail
+	user, err = suite.store.GetUserByEmail(email)
 	suite.Nil(err)
-	suite.Equal(*user, *sameUser)
+	suite.NotNil(user)
+	suite.Equal(username, user.Username)
+	suite.Equal(email, user.Email)
+
+	// Test UpdateUser
+	firstName := "fname"
+	userPatch := schema.User{Username: &username, FirstName: &firstName}
+	user, err = suite.store.UpdateUser(&userPatch)
+	suite.Nil(err)
+	suite.Equal(user.Username, *userPatch.Username)
+	suite.Equal(user.FirstName, *userPatch.FirstName)
+	suite.Equal(user.Email, email)
+
+	// Test DeleteUser
+	user, err = suite.store.DeleteUser(username)
+	suite.Nil(err)
+	suite.NotNil(user)
+	suite.Equal(username, user.Username)
+	suite.Equal(email, user.Email)
 }

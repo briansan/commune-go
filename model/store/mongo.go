@@ -5,6 +5,8 @@ import (
 
 	"github.com/mgutz/logxi/v1"
 	"gopkg.in/mgo.v2"
+
+	"github.com/briansan/commune-go/errors"
 )
 
 const (
@@ -31,20 +33,50 @@ func getMongoURL() string {
 }
 
 func init() {
-	var err error
-	if mongo, err = mgo.Dial(getMongoURL()); err != nil {
+	if err := InitMongoSession(); err != nil {
 		panic(err)
 	}
 }
 
-func NewMongoStore() *MongoStore {
-	return &MongoStore{mongo.Copy()}
+// InitMongoSession resets the mongo session pointer with updated connection info
+func InitMongoSession() error {
+	// To avoid a socket leak
+	if mongo != nil {
+		CleanupMongoSession()
+	}
+
+	// Establish new session
+	var err error
+	if mongo, err = mgo.Dial(getMongoURL()); err != nil {
+		return err
+	}
+	return nil
 }
 
+// CleanupMongoSession closes the current session and sets the pointer to nil
+func CleanupMongoSession() {
+	if mongo == nil {
+		return
+	}
+	mongo.Close()
+	mongo = nil
+}
+
+// NewMongoStore returns an instance of the store with a copied mongo session
+// error is 500 if mongo ping fails
+func NewMongoStore() (*MongoStore, errors.HTTPError) {
+	if err := mongo.Ping(); err != nil {
+		return nil, errors.MongoErr{Err: err}
+	}
+	return &MongoStore{mongo.Copy()}, nil
+}
+
+// Cleanup closes the mongo session of this store object
 func (m *MongoStore) Cleanup() {
 	m.s.Close()
 }
 
+// GetDatabase returns a pointer to an mgo database object
 func (m *MongoStore) GetDatabase() *mgo.Database {
-	return m.s.DB("commune")
+	return m.s.DB(databaseName)
 }
